@@ -97,8 +97,8 @@ if(!has_capability('mod/evoting:openevoting', $context_course)){
 	echo $divTitle;
 	
 	// QR Code and Link
-	$qrCodeS = "https://api.qrserver.com/v1/create-qr-code/?color=000000&bgcolor=FFFFFF&data=" . urlencode(QRCODE_URL)  ."&qzone=1&margin=0&size=60x60&ecc=L";
-	$imgQrCodeS  = html_writer::empty_tag('img', array('src'=>$qrCodeS, 'alt'=>'QrCode', 'style'=>'border: 5px solid #007cb7;'));
+        $qrCodeS = "https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=" . urlencode(QRCODE_URL) . "&choe=UTF-8";
+	$imgQrCodeS  = html_writer::empty_tag('img', array('src'=>$qrCodeS, 'alt'=>'QrCode'));
 
 	$votelinkText =  html_writer::start_tag('h5', array('style' => 'text-align: center; margin:0 auto')).get_string('vote', 'evoting') . html_writer::end_tag('h5');
 
@@ -110,25 +110,6 @@ if(!has_capability('mod/evoting:openevoting', $context_course)){
 	echo $divButtonQRCode;
 
 	echo html_writer::start_tag('div', array('style' => 'clear: both;'));
-	echo html_writer::end_tag('div');
-
-	$qrCode = "https://api.qrserver.com/v1/create-qr-code/?color=000000&bgcolor=FFFFFF&data=" . urlencode(QRCODE_URL) ."&qzone=1&margin=0&size=400x400&ecc=L";
-	$imgQrCode  = html_writer::empty_tag('img', array('src'=>$qrCode, 'alt'=>'QrCode','style'=>'border: 5px solid #007cb7;'));
-	echo html_writer::start_tag('div', array('id' => 'QrCodeBig', 'style' => 'width: 100%; display: none;text-align: center; padding:25px;'));
-	
-	echo html_writer::start_tag('h4', array('id' => 'inigma')) . get_string('scan','evoting') .  html_writer::start_tag('span', array('style' => 'font-weight:bold;')) . 'i-nigma' . html_writer::end_tag('span') . html_writer::end_tag('h4');
-	
-	$inigmaGooglePlay  = html_writer::empty_tag('img', array('src'=>'./pix/googleplay.jpg', 'alt'=>'Google Play', 'height'=> '40', 'style' => 'margin:10px'));
-	echo html_writer::start_tag('a', array( 'href' => 'https://play.google.com/store/apps/details?id=com.threegvision.products.inigma.Android','style'=> 'cursor:pointer;')) . $inigmaGooglePlay . html_writer::end_tag('a');
-	
-	$inigmaAppleStore  = html_writer::empty_tag('img', array('src'=>'./pix/applestore.png', 'alt'=>'Apple Store', 'height'=> '40', 'style' => 'margin:10px'));
-	echo html_writer::start_tag('a', array( 'href' => 'https://itunes.apple.com/fr/app/i-nigma-qr-code-data-matrix/id388923203?mt=8','style'=> 'cursor:pointer;')) . $inigmaAppleStore . html_writer::end_tag('a');
-	
-	$inigmaWindowStore  = html_writer::empty_tag('img', array('src'=>'./pix/windowstore.png', 'alt'=>'Windows Store', 'height'=> '40', 'style' => 'margin:10px'));
-	echo html_writer::start_tag('a', array( 'href' => 'http://www.windowsphone.com/fr-ch/store/app/i-nigma/828c4e78-1d2b-4fd2-ad22-fde9c553e263','style'=> 'cursor:pointer;')) . $inigmaWindowStore . html_writer::end_tag('a');
-	
-	echo html_writer::link('#', $imgQrCode,  array('onclick' => 'M.mod_evoting.poll_init.hideQrCode()', 'title' => get_string('msgHideQrCode', 'evoting'), 'target' => "_top", 'style'=>'display:block;text-align: center;margin-top:20px;' ));
-	echo html_writer::link(QRCODE_URL, '<h1 style="text-transform:none">'. QRCODE_URL .'</h1>', array('target'=>'_blank', 'style'=>'margin:15px auto;' ));
 	echo html_writer::end_tag('div');
 	
 	echo $OUTPUT -> heading("<span style='display:none' id='numberQuestion'>" . $evoting -> questions -> number. "</span>", 5);
@@ -275,47 +256,49 @@ if(!has_capability('mod/evoting:openevoting', $context_course)){
 	$questionslist = evoting_get_questions($evoting -> idpoll);
 	$questionslistlength = count($questionslist);
 
-	echo html_writer::start_tag('div', array('id' => 'questionNav', 'style' => 'width: 100%; text-align: center;'));
+	echo html_writer::start_tag('ul', array('class' => 'pagination'));
+        $disabled = 'disabled';
+        $html = html_writer::span('');
 	if($evoting -> questions -> number > 1 )
 	{
-		echo html_writer::empty_tag('input', array('type'=>'button', 'id'=>'buttonBack', 'value'=>get_string('previous', 'evoting'), 'class' => 'btnPrevious'));
+            $disabled = '';
+            $html = html_writer::start_tag('a', array('href' => '#',
+                'title' => get_string('previous', 'evoting'), 'data-value' => -2, 'class' => 'pagenum'));
+            $html .= html_writer::end_tag('a');
 	}
-	else
-	{
-		echo html_writer::empty_tag('input', array('type'=>'button', 'id'=>'buttonBack', 'value'=>get_string('previous', 'evoting'), 'class' => 'btnPreviousDes', 'disabled'=>''));
-	}
+        echo html_writer::start_tag('li', array('class' => $disabled));
+        echo $html;
+        echo html_writer::end_tag('li');
 
 	foreach ($questionslist as $question) {
-
+                $current = '';
+                $htmlpage = html_writer::start_tag('a', array('href' => '#',
+                    'class' => 'pagenum', 'data-value' => $question->number));
+                $htmlpage .= $question->number;
+                $htmlpage .= html_writer::end_tag('a');
 		if($question->number == $evoting -> questions -> number)
 		{
-			echo html_writer::start_tag('span', array('class' => 'textOsw', 'style' => 'cursor:pointer;margin:0 5px;color:#007cb7; font-size:1.2em;')).$question->number; 
-			echo html_writer::end_tag('span');
+                    $current = "active";
+                    $htmlpage = html_writer::span($question->number);
 		}
-		else
-		{
-			echo html_writer::start_tag('span', array('class' => 'textOsw', 'style' => 'cursor:pointer;margin:0 5px;color:#aca39a; font-size:1em;')).$question->number; 
-			echo html_writer::end_tag('span');
-		}
-		
+                echo html_writer::start_tag('li', array('class' => $current));
+                echo $htmlpage;
+                echo html_writer::end_tag('li');
 	}
-
+        $disabled = 'disabled';
+        $html = html_writer::span('');
 	if($evoting -> questions -> number < $questionslistlength )
 	{
-		echo html_writer::empty_tag('input', array('type'=>'button', 'id'=>'buttonNext', 'value'=>get_string('next', 'evoting'), 'class' => 'btnNext'));
+            $disabled = '';
+            $html = html_writer::start_tag('a', array('href' => '#',
+                'title' => get_string('next', 'evoting'), 'data-value' => -1, 'class' => 'pagenum'));
+            $html .= html_writer::end_tag('a');
 	}
-	else
-	{
-		echo html_writer::empty_tag('input', array('type'=>'button', 'id'=>'buttonNext', 'value'=>get_string('next', 'evoting'), 'class' => 'btnNextDes', 'disabled'=>''));
-	}
-	
-	echo html_writer::end_tag('div');
+        echo html_writer::start_tag('li', array('class' => $disabled));
+        echo $html;
+        echo html_writer::end_tag('li');
 
-	// Button Back / Next
-	$divButtonNavigate  = html_writer::start_div('div', array('id' => 'divButtonNavigate'));
-	$divButtonNavigate .= html_writer::empty_tag('input', array('type'=>'button', 'id'=>'buttonBack', 'value'=>'<'));
-	$divButtonNavigate .= html_writer::empty_tag('input', array('type'=>'button', 'id'=>'buttonNext', 'value'=>'>'));
-	$divButtonNavigate .= html_writer::end_div();
+	echo html_writer::end_tag('ul');
 
 	// Button and statut Start / Stop Poll
 	$divButtonActivPoll  = html_writer::start_div('div', array('id' => 'divButtonActivPoll'));

@@ -87,6 +87,9 @@ if (!has_capability('mod/evoting:openevoting', $context_course)) {
 	echo file_rewrite_pluginfile_urls($evoting->questions->name, 'pluginfile.php', $context->id, 'mod_evoting', "questioneditor", $evoting->questions->id);
 	echo html_writer::end_tag('div');
 
+        // Array from intitiate graphic.
+        $arrayDataGraphic = array();
+
 	// History list
 	$historyList = evoting_get_history_list($idQuestion);
 	$countHistory = sizeof($historyList);
@@ -128,9 +131,6 @@ if (!has_capability('mod/evoting:openevoting', $context_course)) {
 		// array color
 		$arrayColor = array("#007cb7");
 
-		// Array from intitiate graphic
-		$arrayDataGraphic = array();
-
 		//Loop to create dynamic options
 		for ($i = 0; $i < $countOptions; $i++) {
 
@@ -165,9 +165,15 @@ if (!has_capability('mod/evoting:openevoting', $context_course)) {
 					$nameOption = $nameOption . " - " . $currentOption . "/" . $sumOptions;
 				}
 			}
-			
-			$arrayOptions =  array(" " . ($i+1) . "  ", $currentOption, $arrayColor[0], $nameOption." " , $idOption, '&nbsp;<h5>&nbsp;'.get_string('countvote','evoting').' <b>&nbsp; '.$currentOption.'</b>&nbsp;&nbsp;&nbsp;</h5>', $trueAnswer);
-			array_push($arrayDataGraphic,$arrayOptions);
+                        $countvote = get_string('countvote', 'evoting');
+                        $arrayDataGraphic[] = array(
+                            " " . ($i + 1) . "  ",
+                            $currentOption,
+                            $arrayColor[0],
+                            $nameOption." ",
+                            $idOption,
+                            "&nbsp;<h5>&nbsp;$countvote<b>&nbsp;$currentOption</b>&nbsp;&nbsp;&nbsp;</h5>",
+                            $trueAnswer);
 		}
 
 		// Div Chart

@@ -87,32 +87,9 @@ M.mod_evoting.poll_init = function (Y, graphData) {
 
         });
 
-        //Hide button back at the first question
-        if ($("#numberQuestion").text() == 1) {
-            $("#buttonBack").prop('disabled', true);
-        } else {
-            $("#buttonBack").prop('disabled', false);
-        }
-
-        // Hide button next at the last question
-        if ($("#inputIdQuestionNext").val() == 0) {
-            $("#buttonNext").prop('disabled', true);
-        } else {
-            $("#buttonNext").prop('disabled', false);
-        }
-
-        // Click on button next to display the next question
-        $("#buttonNext").click(function () {
-            changeQuestion(idPoll, -1);
-        });
-
-        // Click on button previous to display the previous question
-        $("#buttonBack").click(function () {
-            changeQuestion(idPoll, -2);
-        });
-
-        $(".textOsw").click(function () {
-            changeQuestion(idPoll, $(this).text());
+        // Click on navigation page.
+        $('.pagenum').on('click', function() {
+            changeQuestion(idPoll, $(this).data('value'));
         });
 
         // Click on button statut poll to set (Start / Stop) the poll
@@ -237,7 +214,7 @@ M.mod_evoting.poll_init = function (Y, graphData) {
         $("#buttonResetQuestion").click(function () {
             reset = true;
             manageGoodAnswer(false);
-            resetQuestion(idPoll, history);
+            resetQuestion(idPoll, history, idQuestion);
         });
 
         // Click on button to show / hide QR Code
@@ -349,7 +326,6 @@ M.mod_evoting.poll_init = function (Y, graphData) {
                 textStyle: {
                     color: '#007cb7',
                     fontName: 'Oswald, Times-Roman',
-                    fontSize: 40,
                     bold: true,
                     italic: false
                 }
@@ -360,10 +336,10 @@ M.mod_evoting.poll_init = function (Y, graphData) {
                 minValue: "0",
                 maxValue: max,
                 gridlines: {
-                    color: '#e6e6e6'
+                    color: '#7EAF29'
                 },
                 textStyle: {
-                    color: '#e6e6e6'
+                    color: '#7EAF29'
                 },
                 titleTextStyle: {
                     color: '#007cb7',
@@ -380,7 +356,6 @@ M.mod_evoting.poll_init = function (Y, graphData) {
             annotations: {
                 textStyle: {
                     fontName: 'Oswald,Helvetica,Arial,sans-serif',
-                    fontSize: 16,
                     bold: false,
                     italic: false,
                     color: '#007cb7',
@@ -392,10 +367,10 @@ M.mod_evoting.poll_init = function (Y, graphData) {
             },
             backgroundColor: '#f6f6f6',
             chartArea: {
-                left: 100,
-                top: 30,
+                left: '5%',
+                top: '5%',
                 height: '75%',
-                width: '90%'
+                width: '100%'
             }
         };
 
@@ -635,7 +610,7 @@ M.mod_evoting.poll_init = function (Y, graphData) {
      * @param idPoll
      * @param history
      */
-    function resetQuestion(idPoll, history) {
+    function resetQuestion(idPoll, history, idQuestion) {
         $.ajax({
             url: './ws/ajax_poll.php',
             type: 'POST',
@@ -643,6 +618,7 @@ M.mod_evoting.poll_init = function (Y, graphData) {
             data: {
                 idPoll: idPoll,
                 idCourse: idCourse,
+                idQuestion: idQuestion,
                 action: 'mdl_resetQuestion',
                 sesskey: M.cfg.sesskey
             },
@@ -777,14 +753,6 @@ M.mod_evoting.poll_init = function (Y, graphData) {
      * Udapte layout graphic to big screen
      */
     function updateOptionGraphicMax() {
-        if (countOptions < 8) {
-            optionsGraph.vAxis.textStyle.fontSize = 40;
-            optionsGraph.annotations.textStyle.fontSize = 18;
-        } else {
-            optionsGraph.vAxis.textStyle.fontSize = 30;
-            optionsGraph.annotations.textStyle.fontSize = 18;
-        }
-
         // Sum of vote
         sumVote = 0;
         $(".answerCount").each(function () {

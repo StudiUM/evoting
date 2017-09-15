@@ -122,48 +122,78 @@ function evoting_save_history($idOptionCurrent, $nbrVoteOptionCurrent, $time)
 }
 
 /**
- * Delete history
+ * Delete history.
+ *
  * @param $time
+ * @param $questionid The question ID
  * @return mixed
  */
-function evoting_delete_history($time)
+function evoting_delete_history($time, $questionid)
 {
     global $DB;
-
-    return $DB->delete_records('evoting_history', array('timestamp' => $time));
+    
+    // Select options.
+    $sql = "SELECT o.id
+              FROM {evoting_options} o
+             WHERE o.evotingquestionid = ?";
+    $options = $DB->get_records_sql($sql, array('id' => $questionid));
+    if (count(array_keys($options))) {
+        list($insql, $params) = $DB->get_in_or_equal(array_keys($options));
+        $params[] = $time;
+        // Delete history.
+        return $DB->delete_records_select('evoting_history', "optionid $insql AND timestamp = ?", $params);
+    }
+    return false;
 }
 
 /**
  * Gets a count options for the poll
- * @param $idPoll
+ * @param $idpoll
  * @return count
  */
-function evoting_get_count_options($idPoll)
-{
+function evoting_get_count_options($idpoll) {
     global $DB;
+    $sql = "SELECT count(op.id)
+              FROM {evoting} e
+         LEFT JOIN {evoting_questions} q ON e.id = q.evotingid
+         LEFT JOIN {evoting_options} op ON op.evotingquestionid = q.id
+ 	     WHERE q.activ = 1 AND e.id = :pollid";
 
-    $options = $DB->get_records_sql("
-	SELECT COUNT(*) AS count FROM {evoting_options} o, {evoting_questions} q, {evoting} p 
-	WHERE q.id = o.evotingquestionid AND p.id = q.evotingid AND p.id = ? 
-	GROUP BY q.id 
-	ORDER BY count 
-	DESC LIMIT 1", array($idPoll));
-    $options = array_values($options);
-
-    return $options[0]->count;
+    return $DB->count_records_sql($sql, array('pollid' => $idpoll));
 }
 
 /**
  * Function that delete the question in moodle form admin
- * @param $idQuestion
+ * @param $idquestion
  * @return mixed
  */
-function evoting_delete_question($idQuestion)
-{
+function evoting_delete_question($idquestion) {
     global $DB;
 
-    return $DB->delete_records('evoting_questions', array('id' => $idQuestion));
+    // Select and Delete answer.
+    $sql = "SELECT a.id
+              FROM {evoting_answers} a, {evoting_options} o
+             WHERE a.optionid = o.id AND o.evotingquestionid = ?";
+    $answers = $DB->get_records_sql($sql, array('id' => $idquestion));
+    if (count(array_keys($answers))) {
+        list($insql, $params) = $DB->get_in_or_equal(array_keys($answers));
+        $DB->delete_records_select('evoting_answers', "id $insql", $params);
+    }
 
+    // Select and Delete options.
+    $sql = "SELECT o.id
+              FROM {evoting_options} o
+             WHERE o.evotingquestionid = ?";
+    $options = $DB->get_records_sql($sql, array('id' => $idquestion));
+    if (count(array_keys($options))) {
+        list($insql, $params) = $DB->get_in_or_equal(array_keys($options));
+        // Delete history.
+        $DB->delete_records_select('evoting_history', "optionid $insql", $params);
+        // Delete options.
+        $DB->delete_records_select('evoting_options', "id $insql", $params);
+    }
+
+    return $DB->delete_records('evoting_questions', array('id' => $idquestion));
 }
 
 /**
@@ -189,19 +219,12 @@ function evoting_reset_userdata($data)
 	AND p.course = ?", array($course));
 
         // Get array values form object [0,1,2,...]
-        $current = array_values($current);
-
-        // Create a copy object of the poll
-        $answer = $current;
-
-        // Count answers to delete
-        $countAnswer = count($answer);
+        $current = array_keys($current);
 
         // Delete in DB Moodle
-        if ($countAnswer > 0) {
-            for ($i = 0; $i < $countAnswer; $i++) {
-                $DB->delete_records('evoting_answers', array('id' => $answer[$i]->id));
-            }
+        if (count($current) > 0) {
+            list($insql, $params) = $DB->get_in_or_equal($current);
+            $DB->delete_records_select('evoting_answers', "id $insql", $params);
         }
     }
 
@@ -231,44 +254,38 @@ function evoting_reset_course_form_definition(&$mform)
 
 /**
  * Function to reset answers of the current question
- * @param $idPoll
+ *
+ * @param int $idQuestion
+ * @param context_course $context_course
  * @return true
  */
-function evoting_reset_question($idPoll, $context_course)
+function evoting_reset_question($idQuestion, $context_course)
 {
     global $DB;
-
-    // Select the Poll with id
-    $current = $DB->get_records_sql("
-SELECT a.id
-FROM {evoting_answers} a, {evoting_options} o, {evoting_questions} q, {evoting} p
-WHERE p.id = q.evotingid
-AND o.evotingquestionid = q.id
-AND a.optionid = o.id
-AND q.evotingid = ?", array($idPoll));
-
-    // Get array values form object [0,1,2,...]
-    $current = array_values($current);
-
-    // Create a copy object of the poll
-    $answer = new stdClass();
-    $answer = $current;
-
-    // Count answers to delete
-    $countAnswer = count($answer);
-
-    // Delete in DB Moodle
-    for ($i = 0; $i < $countAnswer; $i++) {
-        $DB->delete_records('evoting_answers', array('id' => $answer[$i]->id));
+    if (!$question = $DB->get_record('evoting_questions', array('id' => $idQuestion))) {
+        return false;
     }
 
-    // Log
+    // Select the Poll with id.
+    $sql = "SELECT a.id
+              FROM {evoting_answers} a, {evoting_options} o
+             WHERE a.optionid = o.id AND o.evotingquestionid = ?";
+    $current = $DB->get_records_sql($sql, array($question->id));
+
+    // Delete in DB Moodle.
+    if (count($current)) {
+        list($insql, $params) = $DB->get_in_or_equal(array_keys($current));
+        $DB->delete_records_select('evoting_answers', "id $insql", $params);
+    }
+
+    // Log.
     $params = array(
         'context' => $context_course,
-        'objectid' => $idPoll,
+        'objectid' => $question->evotingid,
+        'other' => array('questionid' => $question->id)
     );
 
-    // Log reset poll
+    // Log reset poll.
     $event = \mod_evoting\event\evoting_reset::create($params);
     $event->trigger();
 
@@ -916,32 +933,35 @@ function evoting_update_instance($evoting)
 function evoting_delete_instance($id)
 {
     global $DB;
-
     if (!$evoting = $DB->get_record('evoting', array('id' => $id))) {
         return false;
     }
 
-    // Select and Delete options
-    $options = $DB->get_records_sql("SELECT o.id FROM {evoting_options} o, {evoting_questions} q, {evoting} p WHERE o.evotingquestionid = q.id AND p.id = q.evotingid AND q.evotingid = ?", array('id' => $evoting->id));
-    $options = array_values($options);
-    $countOptions = count($options);
-    for ($i = 0; $i < $countOptions; $i++) {
-        $DB->delete_records('evoting_options', array('id' => $options[$i]->id));
-    }
-
-    // Select and Delete answer
+    // Select and Delete answer.
     $answers = $DB->get_records_sql("SELECT a.id FROM {evoting_answers} a, {evoting_options} o, {evoting_questions} q, {evoting} p WHERE a.optionid = o.id AND o.evotingquestionid = q.id AND p.id = q.evotingid AND q.evotingid = ?", array('id' => $evoting->id));
-    $answers = array_values($answers);
-    $countAnswers = count($answers);
-    for ($i = 0; $i < $countAnswers; $i++) {
-        $DB->delete_records('evoting_answers', array('id' => $answers[$i]->id));
+    if (count(array_keys($answers))) {
+        list($insql, $params) = $DB->get_in_or_equal(array_keys($answers));
+        $DB->delete_records_select('evoting_answers', "id $insql", $params);
     }
 
-    // Delete Poll
-    $DB->delete_records('evoting', array('id' => $evoting->id));
+    // Select and Delete options.
+    $sql = "SELECT o.id
+              FROM {evoting_options} o, {evoting_questions} q, {evoting} p
+             WHERE o.evotingquestionid = q.id AND p.id = q.evotingid AND q.evotingid = ?";
+    $options = $DB->get_records_sql($sql, array('id' => $evoting->id));
+    if (count(array_keys($options))) {
+        list($insql, $params) = $DB->get_in_or_equal(array_keys($options));
+        // Delete history.
+        $DB->delete_records_select('evoting_history', "optionid $insql", $params);
+        // Delete options.
+        $DB->delete_records_select('evoting_options', "id $insql", $params);
+    }
 
     // Delete questions
     $DB->delete_records('evoting_questions', array('evotingid' => $evoting->id));
+
+    // Delete Poll
+    $DB->delete_records('evoting', array('id' => $evoting->id));
 
     return true;
 }

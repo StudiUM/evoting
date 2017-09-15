@@ -32,15 +32,25 @@ require_sesskey();
  * Variable to recieve
  */
 $action = optional_param('action', '', PARAM_TEXT);
-$idClient = optional_param('idClient', '', PARAM_INT);
+$idClient = optional_param('idClient', '', PARAM_TEXT);
 $choice = optional_param('choice', '', PARAM_TEXT);
 $idPoll = optional_param('idPoll', '', PARAM_INT);
 $lang = optional_param('lang', '', PARAM_TEXT);
+$validclientid = true;
+
+// Validate client id.
+if (!isset($SESSION->evotingclientid) || empty($idClient) || $idClient != $SESSION->evotingclientid) {
+    $validclientid = false;
+}
 
 if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
 	if(confirm_sesskey()){
 		switch ($action) {
 			case 'client_vote':
+                                if (!$validclientid) {
+                                    echo "Invalid session";
+                                    break;
+                                }
 				//Add vote
 				echo evoting_vote($idClient, $choice, $idPoll, $lang);
 				break;

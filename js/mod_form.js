@@ -55,16 +55,16 @@ M.mod_evoting.form_init = function (Y, boolUpdate) {
                 var valueInput = $('#id_option' + j + '_' + i).val();
 
                 if (j < 4) {
-                    $('#id_option' + j + '_' + i).parent().parent().parent().addClass("visible");
+                    $('#id_option' + j + '_' + i).closest("tr").addClass("visible");
                 } else {
-                    $('#id_option' + j + '_' + i).parent().parent().parent().addClass("noVisible");
+                    $('#id_option' + j + '_' + i).closest("tr").addClass("noVisible");
 
                     if (valueInput.length == 0) {
-                        $('#id_option' + j + '_' + i).parent().parent().parent().addClass("noVisible");
-                        $('#id_option' + j + '_' + i).parent().parent().parent().removeClass("visible");
+                        $('#id_option' + j + '_' + i).closest("tr").addClass("noVisible");
+                        $('#id_option' + j + '_' + i).closest("tr").removeClass("visible");
                     } else {
-                        $('#id_option' + j + '_' + i).parent().parent().parent().addClass("visible");
-                        $('#id_option' + j + '_' + i).parent().parent().parent().removeClass("noVisible");
+                        $('#id_option' + j + '_' + i).closest("tr").addClass("visible");
+                        $('#id_option' + j + '_' + i).closest("tr").removeClass("noVisible");
                     }
                 }
 
@@ -77,7 +77,7 @@ M.mod_evoting.form_init = function (Y, boolUpdate) {
             var idButtonAddChoice = this.id;
             // Get the number of the question addChoice
             var numberQuestion = idButtonAddChoice.charAt(idButtonAddChoice.length - 1);
-            var choiceToAdd = $('#id_option0' + '_' + numberQuestion).parent().parent().parent().nextAll(".noVisible").first();
+            var choiceToAdd = $('#id_option0' + '_' + numberQuestion).closest("tr").nextAll(".noVisible").first();
             if(parseInt(choiceToAdd.length) == 0){
                 alert(M.util.get_string('noaddChoice','evoting'));
                 return false;

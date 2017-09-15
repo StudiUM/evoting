@@ -100,6 +100,7 @@ M.mod_evoting.history_init = function (Y, graphData) {
 			data: {
 				time: select,
 				idCourse : idCourse,
+                                idQuestion: $('#inputIdQuestion').val(),
 				action: 'mdl_delete_history',
 				sesskey: M.cfg.sesskey
 			},
@@ -168,7 +169,6 @@ M.mod_evoting.history_init = function (Y, graphData) {
 				textStyle: {
 					color: '#007cb7',
 					fontName: 'Oswald, Times-Roman',
-					fontSize: 40,
 					bold: true,
 					italic: false
 				}
@@ -199,7 +199,6 @@ M.mod_evoting.history_init = function (Y, graphData) {
 			annotations: {
 				textStyle: {
 					fontName: 'Oswald,Helvetica,Arial,sans-serif',
-					fontSize: 20,
 					bold: false,
 					italic: false,
 					color: '#007cb7',
@@ -213,10 +212,10 @@ M.mod_evoting.history_init = function (Y, graphData) {
 			},
 			backgroundColor: '#f6f6f6',
 			chartArea: {
-				left: 100,
-				top: 30,
+				left: '5%',
+				top: '5%',
 				height: '75%',
-				width: '90%'
+				width: '100%'
 			}
 		};
 
@@ -241,14 +240,6 @@ M.mod_evoting.history_init = function (Y, graphData) {
 	 * Function to update the design of the graphic in mode maxi
 	 */
 	function updateOptionGraphicMax() {
-
-		if (countOptions < 8) {
-			optionsGraph.vAxis.textStyle.fontSize = 40;
-			optionsGraph.annotations.textStyle.fontSize = 18;
-		} else {
-			optionsGraph.vAxis.textStyle.fontSize = 30;
-			optionsGraph.annotations.textStyle.fontSize = 18;
-		}
 
 		optionsGraph.hAxis.title = M.util.get_string('totalvote', 'evoting') + " : " + sumVote;
 

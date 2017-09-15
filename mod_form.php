@@ -90,34 +90,48 @@ class mod_evoting_mod_form extends moodleform_mod {
 		$mform->setType('questionname', PARAM_RAW);
 
 		$repeatQuestionArray[] =  $mform -> createElement('html','<div class="container_choices">');
-		
-		$repeatQuestionArray[] =  $mform -> createElement('html',
-			'<div class="header_choice">
-				<div class="header_label">'.
-					get_string('choice', 'evoting').'
-				</div>
-				<div class="header_text">'.
-					get_string('text', 'evoting').'
-				</div>
-				<div class="header_correct">'.
-					get_string('selectanswer', 'evoting').'
-				</div>
-			</div>');
+                $repeatQuestionArray[] = $mform->createElement('html', '<table>');
+                $repeatQuestionArray[] = $mform->createElement('html', '<thead>');
 
+                $repeatQuestionArray[] = $mform->createElement('html',
+                    '<tr class="header_choice">
+                                <th class="header_label c1">'.
+                                    get_string('choice', 'evoting').'
+                                </th>
+                                <th class="header_text c2">'.
+                                    get_string('text', 'evoting').'
+                                </th>
+                                <th class="header_correct c3">'.
+                                    get_string('selectanswer', 'evoting').'
+                                </th>
+                    </tr>');
+                $repeatQuestionArray[] = $mform->createElement('html', '</thead>');
+                $repeatQuestionArray[] = $mform->createElement('html', '<tbody>');
 		// Create and set type for the field OptionName and OptionID
 		$maxChoice = get_config('evoting', 'evoting_number_choice');
 		$mform -> addElement('hidden', 'max_choice', $maxChoice);
 		$mform -> setType('max_choice', PARAM_INT);
 
 		for ($i = 0; $i < $maxChoice; $i++) {
-			$repeatQuestionArray[] =  $mform -> createElement('html','<div class="container_choice">');
-			$repeatQuestionArray[] = $mform -> createElement('text', 'option' . $i, $i + 1, 'class="evotingQuestionText" maxlength="70" ');
-			$repeatQuestionArray[] = $mform -> createElement('hidden', 'optionid' . $i, 0);
-			$repeatQuestionArray[] = $mform->createElement('advcheckbox', 'right' . $i,'', '',array('group' => 1), array(0, 1));
-			$repeatQuestionArray[] =  $mform -> createElement('html','</div>');
+                        $repeatQuestionArray[] = $mform->createElement('html', '<tr>');
+                        $repeatQuestionArray[] = $mform->createElement('html', '<td class="c1"></td>');
+
+                        $repeatQuestionArray[] = $mform->createElement('html', '<td class="c2">');
+
+                        $repeatQuestionArray[] = $mform->createElement('text',
+                                'option' . $i, $i + 1, 'class="evotingQuestionText" maxlength="70" ');
+                        $repeatQuestionArray[] = $mform->createElement('hidden', 'optionid' . $i, 0);
+                        $repeatQuestionArray[] = $mform->createElement('html', '</td>');
+                        $repeatQuestionArray[] = $mform->createElement('html', '<td class="c3">');
+                        $repeatQuestionArray[] = $mform->createElement('advcheckbox',
+                                'right' . $i, '', '', array('group' => 1), array(0, 1));
+                        $repeatQuestionArray[] = $mform->createElement('html', '</td>');
+                        $repeatQuestionArray[] = $mform->createElement('html', '</tr>');
 			$mform -> setType('option' . $i, PARAM_TEXT);
 			$mform -> setType('optionid' . $i, PARAM_INT);
 		}
+                $repeatQuestionArray[] = $mform->createElement('html', '</tbody>');
+                $repeatQuestionArray[] = $mform->createElement('html', '</table>');
 
 		// Add choice question button
 		$repeatQuestionArray[] =  $mform -> createElement('html','<div class="container_add_choice">');

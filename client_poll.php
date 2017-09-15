@@ -25,6 +25,19 @@ require_once ("../../config.php");
 
 $idPoll = required_param('id', PARAM_INT);
 $lang = required_param('lang', PARAM_TEXT);
+if (!isset($SESSION->evotingclientid)) {
+    $clientid = uniqid('', true);
+    $SESSION->evotingclientid = $clientid;
+} else {
+    $clientid = $SESSION->evotingclientid;
+}
+
+$jqueryurl = new moodle_url('/lib/jquery/jquery-3.1.0.js');
+
+$cm = get_coursemodule_from_instance('evoting', $idPoll, 0, false, MUST_EXIST);
+$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+$gotocoursetext = get_string_manager()->get_string('gotocourse', 'evoting', null, $lang);
+$gotocourselink = html_writer::link(new moodle_url('/course/view.php', array('id' => $course->id)), $gotocoursetext);
 ?>
 
 <!DOCTYPE html>
@@ -34,26 +47,25 @@ $lang = required_param('lang', PARAM_TEXT);
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>E-Voting</title>
-    <link rel="stylesheet" href="./css/bootstrap.min.css">
-    <link rel="stylesheet" href="./css/bootstrap-theme.min.css">
     <link rel="stylesheet" href="styles.css">
-    <script src="./js/jquery-3.1.0.min.js"></script>
-    <script src="./js/bootstrap.min.js"></script>
+    <script src="<?php echo $jqueryurl->out();?>"></script>
     <script src="./js/html5shiv.min.js"></script>
     <script src="./js/respond.min.js"></script>
-	<script src="./js/client_poll.js"></script>
-
-<?php
-echo "<body id=\"clientVote\" style=\"height:100%\" class=\"path-mod-evoting\">\n";
-echo "	<div id=\"clientOptions\">		\n";
-echo "	</div>	\n";
-echo "		<span id=\"spanIdPoll\" style=\"display:none\">$idPoll</span>\n";
-echo "		<div class='toastBg' style='display:none'></div>\n";
-echo "		<div id='myToast' class='toast' style='display:none'><span></span></div>\n";
-echo "		<div id='preloadImg' style='display:none'></div>\n";
-echo "		<input id=\"lang\" type=\"hidden\" value=\"$lang\">\n";
-echo '		<input id="sesskey" type="hidden" value="' . sesskey()  . '">';
-echo "</body>\n";
-?>
+    <script src="./js/client_poll.js"></script>
+</head>
+<body id="clientVote" style="height:100%" class="path-mod-evoting">
+    <div id="clientOptions"></div>
+    <span id="spanIdPoll" style="display:none"><?php echo $idPoll;?></span>
+    <div class="toastBg" style="display:none"></div>
+    <div id="myToast" class='toast' style="display:none">
+        <span></span>
+    </div>
+    <div id="preloadImg" style="display:none"></div>
+    <input id="lang" type="hidden" value="<?php echo $lang;?>">
+    <input id="sesskey" type="hidden" value="<?php echo sesskey();?>">
+    <input id="clientid" type="hidden" value="<?php echo $clientid;?>">
+    <div id="backtocourse"><h1><?php echo $gotocourselink;?></h1></div>
+</body>
+</html>
 
 

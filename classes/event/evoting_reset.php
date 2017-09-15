@@ -44,7 +44,13 @@ class evoting_reset extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return get_string('eventevotinguserid', 'mod_evoting') .  ' ' . $this->userid . ' ' . get_string('eventevotingobjectidreset', 'mod_evoting') . ' ' . $this->objectid . ' ' . get_string('eventusercontextid', 'mod_evoting') . ' ' .$this->contextinstanceid;
+        $stringparams = array(
+            'userid' => $this->userid,
+            'questionid' => $this->other['questionid'],
+            'pollid' => $this->objectid
+        );
+        $contextinstance = get_string('eventusercontextid', 'mod_evoting') . ' ' .$this->contextinstanceid;
+        return get_string('eventresetquestionpoll', 'mod_evoting', $stringparams) . ' ' . $contextinstance;
     }
 
     /**
